@@ -5,7 +5,7 @@ import datetime
 
 st.set_page_config(page_title="Gov Regulatory Portal", page_icon="🏛️", layout="centered")
 
-st.title("### Government Regulatory Portal")
+st.title("Government Regulatory Portal")
 st.caption("Simulator: Publish new labor laws here.")
 
 # Input Form
