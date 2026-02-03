@@ -42,13 +42,6 @@ st.markdown("""
         color: var(--text-dark);
     }
 
-    /* REMOVE RED ALERTS (Streamlit override) */
-    .stAlert {
-        background-color: #eff6ff !important;
-        border: 1px solid #bfdbfe !important;
-        color: #1e40af !important;
-    }
-
     /* HEADERS */
     .main-header {
         font-weight: 700;
@@ -75,7 +68,7 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    /* --- BUTTON STYLING (ALL BLUE) --- */
+    /* --- BUTTON STYLING (FORCE BLUE) --- */
     
     /* Secondary/Outline Buttons */
     div.stButton > button {
@@ -91,19 +84,19 @@ st.markdown("""
         color: var(--brand-blue);
         border-color: var(--brand-blue);
     }
-    div.stButton > button:active {
-        background-color: #dbeafe;
-    }
 
-    /* Primary/Solid Buttons */
+    /* Primary/Solid Buttons (Overrides default Red) */
     div.stButton > button[kind="primary"] {
-        background-color: var(--brand-bright);
-        color: white;
-        border: 2px solid var(--brand-bright);
+        background-color: var(--brand-bright) !important;
+        color: white !important;
+        border: 2px solid var(--brand-bright) !important;
     }
     div.stButton > button[kind="primary"]:hover {
-        background-color: var(--brand-blue);
-        border-color: var(--brand-blue);
+        background-color: var(--brand-blue) !important;
+        border-color: var(--brand-blue) !important;
+    }
+    div.stButton > button[kind="primary"]:active {
+        background-color: var(--brand-blue) !important;
     }
 
     /* TABS */
@@ -121,23 +114,12 @@ st.markdown("""
         border-color: var(--brand-bright) !important;
         box-shadow: 0 0 0 1px var(--brand-bright) !important;
     }
-
-    /* CHAT BUBBLES */
-    .stChatMessage {
-        background-color: transparent;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    /* Hide default avatars to remove emoji reliance */
-    .stChatMessage .st-emotion-cache-1p1m4ay, .stChatMessage .st-emotion-cache-10trblm {
-        display: none;
-    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- CLOUD/FIRST-RUN INITIALIZATION ---
 if not os.path.exists(Config.DB_PATH):
     if 'has_run_setup' not in st.session_state:
-        # Replaced warning icon with blue info box
         st.info("System Initialization: Building Database & Index...")
         try:
             import setup_env 
@@ -148,7 +130,7 @@ if not os.path.exists(Config.DB_PATH):
             time.sleep(1)
             st.rerun()
         except Exception as e:
-            st.code(f"Setup Failed: {e}") # Using code block to avoid red text
+            st.code(f"Setup Failed: {e}") 
 
 # --- SESSION STATE INITIALIZATION ---
 if 'agent' not in st.session_state:
@@ -170,6 +152,7 @@ if not st.session_state.user:
             st.markdown("### Authorization")
             with st.form("login_form"):
                 uid = st.text_input("Employee ID", placeholder="Enter Credentials")
+                # Blue Button (Forced via CSS)
                 submitted = st.form_submit_button("AUTHENTICATE ACCESS", type="primary", use_container_width=True)
                 
                 if submitted:
@@ -178,7 +161,6 @@ if not st.session_state.user:
                         st.session_state.user = user
                         st.rerun()
                     else:
-                        # Custom styled error box (Blue/Grey) instead of Red
                         st.markdown("""
                             <div style="padding: 10px; background-color: #f1f5f9; border-left: 5px solid #334155; color: #334155; margin-top: 10px;">
                                 <b>Access Denied:</b> ID not found in directory.
@@ -205,11 +187,12 @@ else:
         
         st.divider()
         if st.button("SIGN OUT", use_container_width=True):
-            # 1. Clear specific keys to ensure a fresh state
+             # 1. Clear specific keys to ensure a fresh state
             keys_to_clear = ['user', 'messages', 'scraped_data', 'analysis_res', 'draft_reply']
             for key in keys_to_clear:
                 if key in st.session_state:
                     del st.session_state[key]
+            # 2. Rerun to show login screen
             st.rerun()
 
     # ====================================================
@@ -223,50 +206,47 @@ else:
             db_history = fetch_chat_history(user['id'])
             st.session_state.messages = db_history if db_history else []
 
-        # Chat Interface
-        chat_container = st.container(height=500, border=True)
-        with chat_container:
-            for msg in st.session_state.messages:
-                # Custom HTML bubbles to avoid emojis
-                bg_color = "#f1f5f9" if msg["role"] == "user" else "#eff6ff"
-                align = "right" if msg["role"] == "user" else "left"
-                border = "#e2e8f0" if msg["role"] == "user" else "#bfdbfe"
-                
-                st.markdown(f"""
-                    <div style="text-align: {align}; margin-bottom: 10px;">
-                        <div style="display: inline-block; padding: 10px 15px; background-color: {bg_color}; border: 1px solid {border}; border-radius: 8px; max-width: 80%;">
-                            {msg['content']}
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+        # 1. DISPLAY CHAT (Reverted to Standard Streamlit Style)
+        for msg in st.session_state.messages:
+            st.chat_message(msg["role"]).write(msg["content"])
 
-        # Input Area
+        # 2. HANDLE INPUT
         if question := st.chat_input("Type your inquiry here..."):
+            # A. User Message
             st.session_state.messages.append({"role": "user", "content": question})
-            with chat_container:
-                st.markdown(f"<div style='text-align: right; margin-bottom: 10px;'><div style='display: inline-block; padding: 10px 15px; background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;'>{question}</div></div>", unsafe_allow_html=True)
+            st.chat_message("user").write(question)
             save_chat_message(user['id'], "user", question)
 
-            # Agent Logic
+            # B. Agent Logic
             with st.spinner("Processing request..."):
                 analysis = agent.calculate_score(question)
                 score = analysis['final_score']
                 metrics = analysis['metrics']
 
+                # --- 3. SHOW SCORE METRICS (RESTORED) ---
+                with st.expander("🧠 Agent Thought Process", expanded=True):
+                    c1, c2, c3 = st.columns(3)
+                    c1.markdown(f"**Intent:** `{metrics.get('intent')}`")
+                    c2.markdown(f"**Tone:** `{metrics.get('tone')}/4`")
+                    c3.markdown(f"**Risk Score:** `{score}`")
+                    
+                    if score > 2.7:
+                        st.markdown(f"<span style='color:red'><b>DECISION: ESCALATE</b></span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<span style='color:green'><b>DECISION: RESEARCH & ANSWER</b></span>", unsafe_allow_html=True)
+
+            # C. Generate Response
             if score > 2.7:
                 assigned_to = assign_hr_round_robin()
                 t_id = create_ticket(user['id'], question, score, assigned_to)
                 
-                # Custom Blue Escalation Box (No Red)
                 response_text = f"**ESCALATION PROTOCOL INITIATED**\n\nTicket #{t_id} has been generated. Specialist {assigned_to} has been notified for immediate review."
-                final_html = f"<div style='text-align: left; margin-bottom: 10px;'><div style='display: inline-block; padding: 10px 15px; background-color: #eff6ff; border: 1px solid #2563eb; color: #1e40af; border-radius: 8px;'>{response_text}</div></div>"
             else:
                 response_text = agent.get_rag_answer(question, user['region'])
-                final_html = f"<div style='text-align: left; margin-bottom: 10px;'><div style='display: inline-block; padding: 10px 15px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;'>{response_text}</div></div>"
 
+            # D. Assistant Reply
             st.session_state.messages.append({"role": "assistant", "content": response_text})
-            with chat_container:
-                st.markdown(final_html, unsafe_allow_html=True)
+            st.chat_message("assistant").write(response_text)
             save_chat_message(user['id'], "assistant", response_text)
 
     # ====================================================
@@ -339,7 +319,7 @@ else:
                         st.divider()
 
                         with st.form("reply_form"):
-                            # Primary Blue Button
+                            # Blue Button (Forced via CSS)
                             if st.form_submit_button("GENERATE AI DRAFT", type="primary", use_container_width=True):
                                 with st.spinner("Analyzing..."):
                                     t_data = ticket_row.to_dict()
@@ -353,6 +333,7 @@ else:
 
                             c1, c2 = st.columns(2)
                             with c1:
+                                # Blue Button (Forced via CSS)
                                 btn_resolve = st.form_submit_button("SEND & RESOLVE", type="primary", use_container_width=True)
                             with c2:
                                 btn_progress = st.form_submit_button("SEND & UPDATE", use_container_width=True)
@@ -392,6 +373,7 @@ else:
                     with st.container(border=True):
                         st.markdown("##### System Indexing")
                         st.caption("Synchronize vector database with updated documents.")
+                        # Blue Button (Forced via CSS)
                         if st.button("REBUILD INDEX", type="primary"):
                             with st.status("Indexing...", expanded=True):
                                 res = agent.rebuild_knowledge_base()
@@ -401,19 +383,18 @@ else:
         if user['role'] == 'ADMIN' and len(tabs) > 2:
             with active_tab[2]:
                 watchdog = PolicyWatchdog(agent)
-                st.subheader("Regulatory Compliance Monitor")
+                st.subheader("Regulatory Monitor")
                 
-                # Main Scan Button
+                # Blue Button (Forced via CSS)
                 if st.button("INITIATE EXTERNAL SCAN", type="primary"):
-                    with st.spinner("Connecting to secure sources..."):
+                    with st.spinner("Connecting to sources..."):
                         res = watchdog.check_for_updates()
                         if res['status'] == 'success':
                             st.session_state['scraped_data'] = res
-                            st.info("New Regulatory Update Detected")
+                            st.info("Update Detected")
                         else:
-                            st.markdown(f"<div style='color: #64748b;'>{res['content']}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color: #475569;'>{res['content']}</div>", unsafe_allow_html=True)
 
-                # Display Results if found
                 if 'scraped_data' in st.session_state:
                     data = st.session_state['scraped_data']
                     st.divider()
@@ -434,9 +415,9 @@ else:
                             st.markdown("##### Legal Analysis Tools")
                             st.caption("AI-powered impact assessment and drafting.")
                             
-                            # ACTION: Run Analysis
+                            # ACTION: Run Analysis (Blue Button)
                             if st.button("RUN IMPACT ANALYSIS", type="primary", use_container_width=True):
-                                with st.spinner("AI Agents are comparing policies..."): # Cleaner than st.status
+                                with st.spinner("AI Agents are comparing policies..."):
                                     analysis = watchdog.analyze_impact(data['body'])
                                     st.session_state['analysis_res'] = analysis
                             
@@ -451,5 +432,6 @@ else:
                                 email_draft = watchdog.draft_legal_email(res['comparison_analysis'])
                                 st.text_area("Legal Briefing Draft", value=email_draft, height=200)
                                 
-                                if st.button("DISPATCH TO LEGAL", use_container_width=True):
+                                # Blue Button (Forced via CSS)
+                                if st.button("DISPATCH TO LEGAL", type="primary", use_container_width=True):
                                     st.success("Briefing dispatched via secure channel.")
