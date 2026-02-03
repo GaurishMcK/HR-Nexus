@@ -401,42 +401,55 @@ else:
         if user['role'] == 'ADMIN' and len(tabs) > 2:
             with active_tab[2]:
                 watchdog = PolicyWatchdog(agent)
-                st.subheader("Regulatory Monitor")
+                st.subheader("Regulatory Compliance Monitor")
                 
+                # Main Scan Button
                 if st.button("INITIATE EXTERNAL SCAN", type="primary"):
-                    with st.spinner("Connecting to sources..."):
+                    with st.spinner("Connecting to secure sources..."):
                         res = watchdog.check_for_updates()
                         if res['status'] == 'success':
                             st.session_state['scraped_data'] = res
-                            st.info("Update Detected")
+                            st.info("New Regulatory Update Detected")
                         else:
-                            st.markdown(f"<div style='color: #475569;'>{res['content']}</div>", unsafe_allow_html=True)
+                            st.markdown(f"<div style='color: #64748b;'>{res['content']}</div>", unsafe_allow_html=True)
 
+                # Display Results if found
                 if 'scraped_data' in st.session_state:
                     data = st.session_state['scraped_data']
                     st.divider()
                     
-                    c_left, c_right = st.columns(2)
-                    with c_left:
-                        with st.container(border=True):
-                            st.markdown(f"##### {data['title']}")
-                            st.markdown("---")
-                            st.markdown(data['body'])
-                    
-                    with c_right:
-                        st.markdown("##### Analysis Tools")
-                        if st.button("RUN IMPACT ANALYSIS", type="primary", use_container_width=True):
-                            with st.status("Analyzing...", expanded=True):
-                                analysis = watchdog.analyze_impact(data['body'])
-                                st.session_state['analysis_res'] = analysis
+                    # Create a container to keep layout stable
+                    with st.container():
+                        c_left, c_right = st.columns([1.2, 1])
                         
-                        if 'analysis_res' in st.session_state:
-                            res = st.session_state['analysis_res']
-                            with st.expander("View Comparison Matrix"):
-                                st.markdown(res['comparison_analysis'])
+                        # Left: The Source Text
+                        with c_left:
+                            with st.container(border=True):
+                                st.markdown(f"**SOURCE:** {data['title']}")
+                                st.markdown("---")
+                                st.markdown(f"<div style='font-size: 0.95rem; color: #334155;'>{data['body']}</div>", unsafe_allow_html=True)
+                        
+                        # Right: The Action Tools
+                        with c_right:
+                            st.markdown("##### Legal Analysis Tools")
+                            st.caption("AI-powered impact assessment and drafting.")
                             
-                            email_draft = watchdog.draft_legal_email(res['comparison_analysis'])
-                            st.text_area("Legal Briefing Draft", value=email_draft, height=200)
+                            # ACTION: Run Analysis
+                            if st.button("RUN IMPACT ANALYSIS", type="primary", use_container_width=True):
+                                with st.spinner("AI Agents are comparing policies..."): # Cleaner than st.status
+                                    analysis = watchdog.analyze_impact(data['body'])
+                                    st.session_state['analysis_res'] = analysis
                             
-                            if st.button("DISPATCH TO LEGAL", type="primary", use_container_width=True):
-                                st.success("Briefing dispatched.")
+                            # Show Results
+                            if 'analysis_res' in st.session_state:
+                                res = st.session_state['analysis_res']
+                                
+                                st.success("Analysis Complete")
+                                with st.expander("View Comparison Matrix", expanded=True):
+                                    st.markdown(res['comparison_analysis'])
+                                
+                                email_draft = watchdog.draft_legal_email(res['comparison_analysis'])
+                                st.text_area("Legal Briefing Draft", value=email_draft, height=200)
+                                
+                                if st.button("DISPATCH TO LEGAL", use_container_width=True):
+                                    st.success("Briefing dispatched via secure channel.")
