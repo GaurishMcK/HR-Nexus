@@ -205,8 +205,11 @@ else:
         
         st.divider()
         if st.button("SIGN OUT", use_container_width=True):
-            st.session_state.user = None
-            st.session_state.messages = []
+            # 1. Clear specific keys to ensure a fresh state
+            keys_to_clear = ['user', 'messages', 'scraped_data', 'analysis_res', 'draft_reply']
+            for key in keys_to_clear:
+                if key in st.session_state:
+                    del st.session_state[key]
             st.rerun()
 
     # ====================================================
