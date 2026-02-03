@@ -5,6 +5,20 @@ import os
 
 # --- LOCAL MODULES ---
 from config import Config
+
+if not os.path.exists(Config.DB_PATH):
+    st.warning("⚙️ First-time setup detected. Building Database & Index...")
+    
+    # 1. Initialize SQLite (Import the logic from setup_env.py)
+    import setup_env # Make sure setup_env is importable or copy logic here
+    
+    # 2. Build Vector DB
+    from modules.agent import HRAgent
+    agent = HRAgent()
+    res = agent.rebuild_knowledge_base()
+    st.success(f"Setup Complete: {res}")
+    st.rerun()
+
 from modules.database import (
     fetch_user, 
     create_ticket, 
