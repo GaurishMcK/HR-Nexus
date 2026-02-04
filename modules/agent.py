@@ -182,11 +182,11 @@ class HRAgent:
                 final_score = 3.0
             
             # Rule 3: Complex Procedure checks
-            elif intent == "PROCEDURAL_GUIDE" and type_str == "L3_SUBJECTIVE":
+            elif intent in ["PROCEDURAL_GUIDE", "POLICY_FACTS", "BENEFITS_INQUIRY"] and type_str == "L3_SUBJECTIVE":
                 final_score = 2.8 # Borderline, might need human help
             
             # Rule 4: Standard Info Queries (Benefits/Facts) are Low Risk
-            elif intent in ["POLICY_FACTS", "BENEFITS_INQUIRY", "GENERAL_CHITCHAT"]:
+            elif intent in ["GENERAL_CHITCHAT"]:
                 final_score = 1.0 + (tone * 0.1)
 
             return {
