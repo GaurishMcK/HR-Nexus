@@ -124,34 +124,32 @@ class HRAgent:
         self.researcher = ResearcherAgent(self.llm, self.embeddings, Config.VECTOR_DB_PATH)
 
     def calculate_score(self, question):
-        """
-        The Supervisor analyzes the request using 5 strict intents.
-        """
-        prompt = f"""
-        You are the Supervisor of an HR Helpdesk. Analyze this request: "{question}"
-        
-        CLASSIFY into these exact categories:
-        
-        1. INTENT (Choose exactly one):
-           - "POLICY_FACTS": Specific numbers, definitions, or rules (e.g. "What is the 401k rate?").
-           - "BENEFITS_INQUIRY": Questions about entitlement, insurance, health, or perks.
-           - "PROCEDURAL_GUIDE": "How-to" questions (e.g. "How do I apply?", "Where is the form?").
-           - "GRIEVANCE_ESCALATION": Complaints, "Not working", "No reply", or frustration.
-           - "GENERAL_CHITCHAT": Greetings, "Hi", "Thanks", "Bye".
-           
-        2. TYPE (Complexity):
-           - "L1_FACTUAL": Simple lookup.
-           - "L2_COMPARATIVE": Comparing regions/rules.
-           - "L3_SUBJECTIVE": Nuanced/Opinionated.
-
-        3. TONE (Emotion):
-           - 1: Neutral/Polite
-           - 2: Anxious/Confused
-           - 3: Frustrated/Annoyed
-           - 4: HOSTILE/AGGRESSIVE (Hate, Threats)
-
-        Output strictly JSON: {{"intent": "STRING", "type": "STRING", "tone": INT}}
-        """
+        prompt =
+            f """
+            You are the Supervisor of an HR Helpdesk. Analyze this request: "{question}"
+            
+            CLASSIFY into these exact categories:
+            
+            1. INTENT (Choose exactly one):
+               - "POLICY_FACTS": Specific numbers, definitions, or rules (e.g. "What is the 401k rate?").
+               - "BENEFITS_INQUIRY": Questions about entitlement, insurance, health, or perks.
+               - "PROCEDURAL_GUIDE": "How-to" questions (e.g. "How do I apply?", "Where is the form?").
+               - "GRIEVANCE_ESCALATION": Complaints, "Not working", "No reply", or frustration.
+               - "GENERAL_CHITCHAT": Greetings, "Hi", "Thanks", "Bye".
+               
+            2. TYPE (Complexity):
+               - "L1_FACTUAL": Simple lookup.
+               - "L2_COMPARATIVE": Comparing regions/rules.
+               - "L3_SUBJECTIVE": Nuanced/Opinionated.
+    
+            3. TONE (Emotion):
+               - 1: Neutral/Polite
+               - 2: Anxious/Confused
+               - 3: Frustrated/Annoyed
+               - 4: HOSTILE/AGGRESSIVE (Hate, Threats)
+    
+            Output strictly JSON: {{"intent": "STRING", "type": "STRING", "tone": INT}}
+            """
         
         try:
             # Call LLM
