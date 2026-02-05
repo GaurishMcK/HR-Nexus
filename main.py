@@ -20,7 +20,7 @@ from modules.watchdog import PolicyWatchdog
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="HR Sentinel", 
+    page_title="People Intelligence Engine", 
     layout="wide", 
     initial_sidebar_state="expanded"
 )
@@ -145,7 +145,7 @@ if 'user' not in st.session_state:
 if not st.session_state.user:
     c1, c2, c3 = st.columns([1, 1, 1])
     with c2:
-        st.markdown("<div style='text-align: center; margin-top: 80px; color: #0f4c81;'><h1>HR SENTINEL</h1></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; margin-top: 80px; color: #0f4c81;'><h1>People Intelligence Engine</h1></div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; color: #64748b; margin-bottom: 40px; letter-spacing: 1px; font-size: 0.9rem;'>ENTERPRISE COMPLIANCE SYSTEM</div>", unsafe_allow_html=True)
         
         with st.container(border=True):
