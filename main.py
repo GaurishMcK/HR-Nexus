@@ -231,7 +231,7 @@ else:
                     c3.markdown(f"**Risk Score:** `{score}`")
                     
                     if score > 2.7:
-                        st.markdown(f"<span style='color:red'><b>DECISION: ESCALATE</b></span>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:red'><b>DECISION: ESCALATE (Avg. TAT: 6 hours)</b></span>", unsafe_allow_html=True)
                     else:
                         st.markdown(f"<span style='color:green'><b>DECISION: RESEARCH & ANSWER</b></span>", unsafe_allow_html=True)
 
