@@ -124,7 +124,7 @@ class HRAgent:
         self.researcher = ResearcherAgent(self.llm, self.embeddings, Config.VECTOR_DB_PATH)
 
     def calculate_score(self, question):
-        prompt = f """
+        prompt = f'''
             You are the Supervisor of an HR Helpdesk. Analyze this request: "{question}"
             
             CLASSIFY into these exact categories:
@@ -148,7 +148,7 @@ class HRAgent:
                - 4: HOSTILE/AGGRESSIVE (Hate, Threats)
     
             Output strictly JSON: {{"intent": "STRING", "type": "STRING", "tone": INT}}
-            """
+            '''
         
         try:
             # Call LLM
