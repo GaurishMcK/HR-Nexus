@@ -8,6 +8,8 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from config import Config
 
+from modules.database import get_employee_salary_details
+
 # ==========================================
 # WORKER 1: THE RESEARCHER (RAG Specialist)
 # ==========================================
